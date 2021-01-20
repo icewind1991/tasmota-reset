@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
             )
             .await?;
         }
-        tokio::time::delay_for(config.duration).await;
+        tokio::time::sleep(config.duration).await;
     }
 }
 
