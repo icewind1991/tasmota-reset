@@ -39,7 +39,7 @@ async fn send_mqtt_message(config: &Config, topic: String, payload: String) -> R
 
     let (mqtt_client, mut event_loop) = AsyncClient::new(mqtt_options, 10);
     mqtt_client
-        .publish(topic, QoS::AtMostOnce, false, payload)
+        .publish(topic, QoS::AtLeastOnce, false, payload)
         .await?;
     mqtt_client.disconnect().await?;
 
@@ -51,5 +51,6 @@ async fn send_mqtt_message(config: &Config, topic: String, payload: String) -> R
         }
     })
     .await;
+    println!("reset successfully sent");
     Ok(())
 }
