@@ -13,3 +13,5 @@ color-eyre = "0.6"
 dotenv = "0.15.0"
 ctrlc = { version = "3", features = ["termination"] }
 rumqttc = "0.11"
+tracing = "0.1.29"
+tracing-subscriber = { version = "0.3.3", features = ["tracing-log"] }

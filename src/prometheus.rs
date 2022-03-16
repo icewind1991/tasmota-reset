@@ -23,6 +23,7 @@ pub enum QueryResultStatus {
 
 #[derive(Debug, Clone, Deserialize)]
 struct QueryResult {
+    #[allow(dead_code)]
     status: QueryResultStatus,
     data: QueryResultData,
 }
@@ -36,6 +37,7 @@ enum QueryResultDataType {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct QueryResultData {
+    #[allow(dead_code)]
     result_type: QueryResultDataType,
     result: Vec<QueryResultDataResult>,
 }
@@ -88,6 +90,7 @@ impl StallDetector {
     }
 
     /// Get a list of tasmota devices for which a specified sensor has stalled
+    #[tracing::instrument]
     pub async fn get_stalled(
         &self,
         metrics: &str,

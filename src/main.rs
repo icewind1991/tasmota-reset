@@ -5,10 +5,13 @@ use crate::config::Config;
 use color_eyre::{eyre::WrapErr, Result};
 use rumqttc::{AsyncClient, Event, Outgoing, QoS};
 use std::time::Duration;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
+    tracing_subscriber::fmt::init();
+
     let config = Config::from_env()?;
     ctrlc::set_handler(move || {
         std::process::exit(0);
@@ -22,10 +25,10 @@ async fn main() -> Result<()> {
             .get_stalled(&config.metric, config.duration)
             .await?
         {
-            println!("{} is stalled, resetting", stalled);
+            info!("{} is stalled, resetting", stalled);
             send_mqtt_message(
                 &config,
-                format!("cmnd/tasmota/{}/restart", stalled).into(),
+                format!("cmnd/{}/restart", stalled).into(),
                 "1".into(),
             )
             .await?;
@@ -34,6 +37,7 @@ async fn main() -> Result<()> {
     }
 }
 
+#[tracing::instrument(skip(config))]
 async fn send_mqtt_message(config: &Config, topic: String, payload: String) -> Result<()> {
     let mqtt_options = config.mqtt()?;
 
@@ -43,14 +47,17 @@ async fn send_mqtt_message(config: &Config, topic: String, payload: String) -> R
         .await?;
     mqtt_client.disconnect().await?;
 
-    let _ = tokio::time::timeout(Duration::from_secs(1), async move {
+    if let Err(_) = tokio::time::timeout(Duration::from_secs(1), async move {
         while let Ok(event) = event_loop.poll().await {
             if matches!(event, Event::Outgoing(Outgoing::Disconnect)) {
                 break;
             }
         }
     })
-    .await;
-    println!("reset successfully sent");
+    .await
+    {
+        error!("Timeout while sending message")
+    }
+    info!("message successfully sent");
     Ok(())
 }
